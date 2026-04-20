@@ -27,7 +27,7 @@ aspire-lab1-starter/
 
 Clone the repo:
 ```bash
-git clone https://github.com/<YOUR-ORG>/aspire-lab1-starter.git
+git clone [https://github.com/<YOUR-ORG>/aspire-lab1-starter.git](https://github.com/pschnidrig/aspireSessionOne.git)
 cd aspire-lab1-starter
 ```
 
