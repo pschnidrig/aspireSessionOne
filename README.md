@@ -11,7 +11,6 @@
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10)
 - Container runtime running: [Docker Desktop](https://www.docker.com/products/docker-desktop/) or [Podman Desktop](https://podman-desktop.io/)
 - Aspire CLI 13.x — [aspire.dev/get-started/install-cli](https://aspire.dev/get-started/install-cli/)
-- Aspire project templates: `dotnet new install Aspire.ProjectTemplates`
 - IDE: VS 2022 (17.10+), VS Code + C# Dev Kit + Aspire extension, or Rider (2024.1+)
 
 ---
@@ -49,46 +48,24 @@ Two terminals, manual port management, no observability. **Aspire solves this.**
 
 ---
 
-## Step 1 – Add the AppHost Project
+## Step 1 – Add Aspire to the Solution
 
-From the solution root:
+From the solution root, run:
 ```bash
-dotnet new aspire-apphost -n WeatherApp.AppHost -o WeatherApp.AppHost
-dotnet sln add WeatherApp.AppHost/WeatherApp.AppHost.csproj
+aspire init
 ```
 
-Add project references so the AppHost knows about your services:
-```bash
-cd WeatherApp.AppHost
-dotnet add reference ../WeatherApi/WeatherApi.csproj
-dotnet add reference ../WeatherWeb/WeatherWeb.csproj
-cd ..
-```
+This single command does all the heavy lifting:
+- Creates the **AppHost** project (`WeatherApp.AppHost/`) and adds it to the solution
+- Creates the **ServiceDefaults** project (`WeatherApp.ServiceDefaults/`) and adds it to the solution
+- Adds a `ServiceDefaults` reference to **both** `WeatherApi` and `WeatherWeb`
+- Injects `builder.AddServiceDefaults()` and `app.MapDefaultEndpoints()` into each `Program.cs`
 
 > The generated entry file is **`AppHost.cs`** — this is where you define the architecture.
 
 ---
 
-## Step 2 – Add the ServiceDefaults Project
-
-```bash
-dotnet new aspire-servicedefaults -n WeatherApp.ServiceDefaults -o WeatherApp.ServiceDefaults
-dotnet sln add WeatherApp.ServiceDefaults/WeatherApp.ServiceDefaults.csproj
-```
-
-Add a reference to ServiceDefaults from **both** services:
-```bash
-cd WeatherApi
-dotnet add reference ../WeatherApp.ServiceDefaults/WeatherApp.ServiceDefaults.csproj
-
-cd ../WeatherWeb
-dotnet add reference ../WeatherApp.ServiceDefaults/WeatherApp.ServiceDefaults.csproj
-cd ..
-```
-
----
-
-## Step 3 – Orchestrate Services in AppHost.cs
+## Step 2 – Orchestrate Services in AppHost.cs
 
 Open `WeatherApp.AppHost/AppHost.cs` and replace the content with:
 
@@ -116,23 +93,7 @@ What each call does:
 
 ---
 
-## Step 4 – Enable ServiceDefaults in Each Service
-
-**In `WeatherApi/Program.cs`**, add directly after `var builder = WebApplication.CreateBuilder(args);`:
-```csharp
-builder.AddServiceDefaults();
-```
-
-And directly after `var app = builder.Build();`:
-```csharp
-app.MapDefaultEndpoints(); // exposes /health and /alive
-```
-
-**Repeat the same two additions in `WeatherWeb/Program.cs`.**
-
----
-
-## Step 5 – Replace the Hardcoded URL
+## Step 3 – Replace the Hardcoded URL
 
 In `WeatherWeb/Program.cs`, swap the hardcoded URL for Aspire service discovery:
 
@@ -150,7 +111,7 @@ The `https+http://` scheme tells Aspire to try HTTPS first, fall back to HTTP.
 
 ---
 
-## Step 6 – Run with Aspire
+## Step 4 – Run with Aspire
 
 From the solution root (or the AppHost folder):
 ```bash
@@ -174,9 +135,9 @@ You will see output like:
 
 ---
 
-## Step 7 – Add Redis Caching
+## Step 5 – Add Redis Caching
 
-### 7a. Add Redis to AppHost.cs
+### 5a. Add Redis to AppHost.cs
 
 ```csharp
 var cache = builder.AddRedis("cache");
@@ -186,13 +147,13 @@ var api = builder.AddProject<Projects.WeatherApi>("weatherapi")
     .WithHttpHealthCheck("/health");
 ```
 
-### 7b. Add the Redis integration package to WeatherApi
+### 5b. Add the Redis integration package to WeatherApi
 ```bash
 cd WeatherApi
 dotnet add package Aspire.StackExchange.Redis.OutputCaching
 ```
 
-### 7c. Register in WeatherApi/Program.cs
+### 5c. Register in WeatherApi/Program.cs
 
 After `builder.AddServiceDefaults();`:
 ```csharp
@@ -204,7 +165,7 @@ After `var app = builder.Build();`:
 app.UseOutputCache();
 ```
 
-### 7d. Apply caching to the endpoint
+### 5d. Apply caching to the endpoint
 ```csharp
 app.MapGet("/weatherforecast", () =>
 {
@@ -222,7 +183,7 @@ app.MapGet("/weatherforecast", () =>
 
 ---
 
-## Step 8 – Observe Caching in the Dashboard
+## Step 6 – Observe Caching in the Dashboard
 
 1. Restart: `aspire run`
 2. Open the web app and refresh the weather page several times
@@ -234,7 +195,7 @@ app.MapGet("/weatherforecast", () =>
 ## ✅ You Are Done!
 
 You have:
-- Added an Aspire `AppHost` and `ServiceDefaults` to an existing solution
+- Added an Aspire `AppHost` and `ServiceDefaults` to an existing solution with `aspire init`
 - Orchestrated two services with a single `aspire run`
 - Eliminated hardcoded URLs with service discovery
 - Added Redis caching with zero manual connection string config
@@ -282,6 +243,7 @@ Dashboard → **Metrics** → look at request duration histograms and memory usa
 
 ## Resources
 
+- [Aspire – Add Aspire to an existing app](https://aspire.dev/get-started/add-aspire-existing-app/)
 - [Aspire quickstart – Build your first app](https://aspire.dev/get-started/first-app/?aspire-lang=csharp)
 - [Aspire quickstart – Deploy your first app](https://aspire.dev/get-started/deploy-first-app/?aspire-lang=csharp)
 - [Aspire – Service Defaults](https://aspire.dev/get-started/csharp-service-defaults/)
