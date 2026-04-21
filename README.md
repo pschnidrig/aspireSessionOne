@@ -147,7 +147,15 @@ var api = builder.AddProject<Projects.WeatherApi>("weatherapi")
     .WithHttpHealthCheck("/health");
 ```
 
-### 5b. Add the Redis integration package to WeatherApi
+### 5b. Add the Redis packages
+
+The AppHost needs the Redis **hosting** integration to use `builder.AddRedis()`:
+```bash
+cd WeatherApp.AppHost
+dotnet add package Aspire.Hosting.Redis
+```
+
+WeatherApi needs the Redis **output caching** client integration:
 ```bash
 cd WeatherApi
 dotnet add package Aspire.StackExchange.Redis.OutputCaching
