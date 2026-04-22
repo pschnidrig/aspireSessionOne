@@ -226,6 +226,7 @@ var cache = builder.AddRedis("cache").WithDataVolume();
 Restart — cached data survives restarts now.
 
 ### Bonus 3 – Deploy with Docker Compose
+I had some problems myself here with podman. If you have too much time left, have a look at https://github.com/pschnidrig/aspireSessionTwo
 
 ```bash
 # 1. Add the Docker Compose deployment package (interactive)
